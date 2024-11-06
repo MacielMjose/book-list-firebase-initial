@@ -1,12 +1,82 @@
 import FullPageLoader from "../components/FullPageLoader.jsx";
 import { useState } from "react";
 import { auth } from "../firebase/config.js";
+import {
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { useDispatch } from "react-redux";
+import { setUser } from "../store/usersSlice.js";
 
 function LoginPage() {
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [loginType, setLoginType] = useState("login");
+  const [userCredentials, setUserCredentials] = useState({});
+  const [error, setError] = useState("");
 
-  console.log(auth);
+  // console.log(auth);
+  // console.log(loginType);
+
+  function handleCredentials(e) {
+    setUserCredentials({ ...userCredentials, [e.target.name]: e.target.value });
+    console.log(userCredentials);
+  }
+
+  function handleSignup(e) {
+    e.preventDefault();
+    setError("");
+    createUserWithEmailAndPassword(
+      auth,
+      userCredentials.email,
+      userCredentials.password
+    )
+      .then((userCredential) => {
+        const user = userCredential.user;
+        dispatch(
+          setUser({
+            id: userCredential.user.uid,
+            email: userCredential.user.email,
+          })
+        );
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        setError(errorMessage);
+      });
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    setError("");
+    signInWithEmailAndPassword(
+      auth,
+      userCredentials.email,
+      userCredentials.password
+    )
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        console.log(userCredential.user);
+        dispatch(
+          setUser({
+            id: userCredential.user.uid,
+            email: userCredential.user.email,
+          })
+        );
+      })
+      .catch((error) => {
+        setError(error.message);
+      });
+  }
+
+  function handlePasswordReset() {
+    const email = prompt("Please enter your email");
+    sendPasswordResetEmail(auth, email);
+    alert("Email sent! Check your inbox for password reset instructions");
+  }
 
   return (
     <>
@@ -33,23 +103,46 @@ function LoginPage() {
           <form className="add-form login">
             <div className="form-control">
               <label>Email *</label>
-              <input type="text" name="email" placeholder="Enter your email" />
+              <input
+                type="text"
+                onChange={(e) => handleCredentials(e)}
+                name="email"
+                placeholder="Enter your email"
+              />
             </div>
             <div className="form-control">
               <label>Password *</label>
               <input
+                onChange={(e) => handleCredentials(e)}
                 type="password"
                 name="password"
                 placeholder="Enter your password"
               />
             </div>
             {loginType == "login" ? (
-              <button className="active btn btn-block">Login</button>
+              <button
+                onClick={(e) => {
+                  handleLogin(e);
+                }}
+                className="active btn btn-block"
+              >
+                Login
+              </button>
             ) : (
-              <button className="active btn btn-block">Sign Up</button>
+              <button
+                onClick={(e) => {
+                  handleSignup(e);
+                }}
+                className="active btn btn-block"
+              >
+                Sign Up
+              </button>
             )}
 
-            <p className="forgot-password">Forgot Password?</p>
+            {error && <div className="error">{error}</div>}
+            <p onClick={handlePasswordReset} className="forgot-password">
+              Forgot Password?
+            </p>
           </form>
         </section>
       </div>
