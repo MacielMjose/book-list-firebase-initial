@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, setDoc } from "firebase/firestore";
 import { db, auth } from "../firebase/config.js";
 import { doc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
 
@@ -53,14 +53,24 @@ export const booksSlice = createSlice({
       })
       .addCase(eraseBook.fulfilled, (state, action) => {
         state.books = state.books.filter((book) => book.id != action.payload);
+        state.status = "succeeded";
       })
       .addCase(eraseBook.rejected, (state, action) => {
         state.status = "failed";
         console.log(action.error.message);
       })
+      .addCase(eraseBook.pending, (state, action) => {
+        state.status = "loading";
+        console.log("loading");
+      })
+      .addCase(addBook.pending, (state, action) => {
+        state.status = "loading";
+        console.log("loading");
+      })
       .addCase(addBook.fulfilled, (state, action) => {
         console.log("fulfilled", action.payload);
         state.books.push(action.payload);
+        state.status = "succeeded";
       })
       .addCase(addBook.rejected, (state, action) => {
         state.status = "failed";

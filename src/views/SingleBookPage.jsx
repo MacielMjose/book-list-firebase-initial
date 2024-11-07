@@ -1,8 +1,16 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Notes from "../components/Notes.jsx";
 import { useSelector, useDispatch } from "react-redux";
-import { selectBooks, eraseBook, toggleRead } from "../store/booksSlice.js";
+import {
+  selectBooks,
+  eraseBook,
+  toggleRead,
+  fetchBooks,
+} from "../store/booksSlice.js";
 import { eraseBookNotes } from "../store/notesSlice.js";
+import { useState, useEffect } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/config.js";
 
 function SingleBookPage() {
   const dispatch = useDispatch();
@@ -20,11 +28,37 @@ function SingleBookPage() {
     }
   }
 
+  function handleToggleRead(info) {
+    dispatch(toggleRead({ id: info.id, isRead: info.isRead }));
+    setBook({ ...book, isRead: !info.isRead });
+  }
+
   const { id } = useParams();
 
-  const books = useSelector(selectBooks).books;
+  const fetchBook = async (book_id) => {
+    try {
+      const docRef = doc(db, "books", book_id);
+      const docSnap = await getDoc(docRef);
 
-  const book = books.filter((book) => book.id == id)[0];
+      if (docSnap.exists()) {
+        console.log("Document data:", docSnap.data());
+        setBook({ ...docSnap.data(), id: docSnap.id });
+      }
+      setFetchStatus("success");
+    } catch (error) {
+      console.log("error", error);
+      setFetchStatus("error");
+    }
+  };
+
+  const [book, setBook] = useState(undefined);
+  const [fetchStatus, setFetchStatus] = useState("idle");
+
+  useEffect(() => {
+    if (fetchStatus == "idle") {
+      fetchBook(id);
+    }
+  }, []);
 
   return (
     <>
@@ -47,9 +81,7 @@ function SingleBookPage() {
                 <div className="read-checkbox">
                   <input
                     onClick={() => {
-                      dispatch(
-                        toggleRead({ id: book.id, isRead: book.isRead })
-                      );
+                      handleToggleRead({ id: book.id, isRead: book.isRead });
                     }}
                     type="checkbox"
                     defaultChecked={book.isRead}
@@ -69,12 +101,20 @@ function SingleBookPage() {
 
             <Notes bookId={id} />
           </div>
-        ) : (
+        ) : fetchStatus == "success" ? (
           <div>
             <p>
               Book not found. Click the button above to go back to the list of
               books.
             </p>
+          </div>
+        ) : fetchStatus == "error" ? (
+          <div>
+            <p>Error fetching the book.</p>
+          </div>
+        ) : (
+          <div>
+            <p>Loading...</p>
           </div>
         )}
       </div>

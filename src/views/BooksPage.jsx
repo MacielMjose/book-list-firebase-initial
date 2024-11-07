@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { selectUsers } from "../store/usersSlice.js";
 import { useDispatch } from "react-redux";
 import { fetchBooks } from "../store/booksSlice.js";
+import { Link } from "react-router-dom";
 
 function BooksPage() {
   const dispatch = useDispatch();
@@ -26,11 +27,20 @@ function BooksPage() {
       <div className="container">
         <Header pageTitle={pageTitle} />
         <div className="books-container">
-          <div className="books-list">
-            {books.map((book) => (
-              <Book key={book.id} book={book} />
-            ))}
-          </div>
+          {books.length ? (
+            <div className="books-list">
+              {books.map((book) => (
+                <Book key={book.id} book={book} />
+              ))}
+            </div>
+          ) : bookStatus == "loading" ? (
+            <div>Loading...</div>
+          ) : (
+            <div>
+              Your book list is empty. <Link to="/add-book">Click here</Link> to
+              add a new book.
+            </div>
+          )}
         </div>
       </div>
     </>
