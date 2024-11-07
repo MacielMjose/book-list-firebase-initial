@@ -2,9 +2,7 @@ import Book from "../components/Book.jsx";
 import Header from "../components/Header.jsx";
 import { useSelector } from "react-redux";
 import { selectBooks } from "../store/booksSlice.js";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { selectUsers } from "../store/usersSlice.js";
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { fetchBooks } from "../store/booksSlice.js";
 import { Link } from "react-router-dom";
@@ -18,7 +16,6 @@ function BooksPage() {
   useEffect(() => {
     if (bookStatus == "idle") {
       dispatch(fetchBooks());
-      console.log("fetched books", books);
     }
   }, []);
 

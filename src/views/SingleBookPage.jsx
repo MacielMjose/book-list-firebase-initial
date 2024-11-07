@@ -1,18 +1,15 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Notes from "../components/Notes.jsx";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  selectBooks,
-  eraseBook,
-  toggleRead,
-  fetchBooks,
-} from "../store/booksSlice.js";
-import { eraseBookNotes } from "../store/notesSlice.js";
+import { useDispatch } from "react-redux";
+import { eraseBook, toggleRead } from "../store/booksSlice.js";
 import { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config.js";
 
 function SingleBookPage() {
+  const { id } = useParams();
+  const [book, setBook] = useState(undefined);
+  const [fetchStatus, setFetchStatus] = useState("idle");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -23,7 +20,6 @@ function SingleBookPage() {
       )
     ) {
       dispatch(eraseBook(id));
-      dispatch(eraseBookNotes(id));
       navigate("/");
     }
   }
@@ -32,8 +28,6 @@ function SingleBookPage() {
     dispatch(toggleRead({ id: info.id, isRead: info.isRead }));
     setBook({ ...book, isRead: !info.isRead });
   }
-
-  const { id } = useParams();
 
   const fetchBook = async (book_id) => {
     try {
@@ -50,9 +44,6 @@ function SingleBookPage() {
       setFetchStatus("error");
     }
   };
-
-  const [book, setBook] = useState(undefined);
-  const [fetchStatus, setFetchStatus] = useState("idle");
 
   useEffect(() => {
     if (fetchStatus == "idle") {

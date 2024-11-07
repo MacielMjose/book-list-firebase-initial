@@ -17,9 +17,6 @@ function LoginPage() {
   const [userCredentials, setUserCredentials] = useState({});
   const [error, setError] = useState("");
 
-  // console.log(auth);
-  // console.log(loginType);
-
   onAuthStateChanged(auth, (user) => {
     if (user) {
       dispatch(
